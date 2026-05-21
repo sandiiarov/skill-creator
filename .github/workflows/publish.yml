@@ -16,15 +16,15 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 10.1.0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 26.x
           cache: pnpm
@@ -49,6 +49,6 @@ jobs:
         run: pnpm build
 
       - name: Publish to npm
-        run: pnpm publish --access public --no-git-checks --provenance
+        run: pnpm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

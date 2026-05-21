@@ -19,8 +19,8 @@
     "url": "git+https://github.com/sandiiarov/skill-creator.git"
   },
   "bin": {
-    "sc": "./dist/cli/main.js",
-    "skill-creator": "./dist/cli/main.js"
+    "sc": "dist/cli/main.js",
+    "skill-creator": "dist/cli/main.js"
   },
   "files": [
     "dist",
