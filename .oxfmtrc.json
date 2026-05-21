@@ -1,0 +1,5 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": true,
+  "ignorePatterns": ["dist/**", "coverage/**", "node_modules/**", ".pi-lens/**"]
+}

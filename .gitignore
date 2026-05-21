@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+.vitest/
+.pi-lens/
+.DS_Store
+*.log
+.env

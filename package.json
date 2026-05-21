@@ -1,0 +1,77 @@
+{
+  "name": "skill-creator",
+  "version": "0.1.0",
+  "description": "Turn any MCP server, OpenAPI spec, or GraphQL endpoint into a CLI at runtime.",
+  "keywords": [
+    "graphql",
+    "mcp",
+    "openapi",
+    "pi-package",
+    "skills"
+  ],
+  "license": "MIT",
+  "bin": {
+    "sc": "./dist/cli/main.js",
+    "skill-creator": "./dist/cli/main.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "prompts",
+    "LICENSE",
+    "README.md"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/cli/main.ts",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^14.2.1",
+    "@graphql-tools/graphql-file-loader": "^8.1.14",
+    "@graphql-tools/json-file-loader": "^8.0.28",
+    "@graphql-tools/load": "^8.1.10",
+    "@graphql-tools/url-loader": "^9.1.2",
+    "@modelcontextprotocol/sdk": "^1.23.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "cacache": "^21.0.0",
+    "graphql": "^16.14.0",
+    "graphql-request": "^7.4.0",
+    "ky": "^2.0.2",
+    "minimatch": "^10.1.1",
+    "string-argv": "^0.3.2",
+    "yaml": "^2.8.1",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/cacache": "^20.0.1",
+    "@types/node": "^24.10.1",
+    "execa": "^9.6.0",
+    "oxfmt": "^0.51.0",
+    "oxlint": "^1.66.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.14"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.1.0",
+  "pi": {
+    "skills": [
+      "./skills"
+    ],
+    "prompts": [
+      "./prompts"
+    ]
+  }
+}
