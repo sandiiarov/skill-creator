@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { coerceAndValidateValue, coerceValue, schemaTypeToCliType } from '../../src/core/coerce.js';
-import { toKebab } from '../../src/core/names.js';
-import { filterCommands } from '../../src/core/filter.js';
+
 import type { CommandDef } from '../../src/core/types.js';
+
+import { coerceAndValidateValue, coerceValue, schemaTypeToCliType } from '../../src/core/coerce.js';
+import { filterCommands } from '../../src/core/filter.js';
+import { toKebab } from '../../src/core/names.js';
 
 describe('schemaTypeToCliType', () => {
   it('maps primitive JSON schema types to CLI types', () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { applyHead, formatOutput } from '../../src/core/output.js';
 
 describe('applyHead', () => {

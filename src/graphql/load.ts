@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
-import ky from 'ky';
 import { JsonFileLoader } from '@graphql-tools/json-file-loader';
 import { loadSchema } from '@graphql-tools/load';
 import { UrlLoader } from '@graphql-tools/url-loader';
@@ -13,6 +11,9 @@ import {
   type IntrospectionQuery,
 } from 'graphql';
 import { GraphQLClient } from 'graphql-request';
+import ky from 'ky';
+import { readFile } from 'node:fs/promises';
+
 import { cacheKeyFor, loadCached, saveCache } from '../core/cache.js';
 
 export type LoadGraphqlOptions = {

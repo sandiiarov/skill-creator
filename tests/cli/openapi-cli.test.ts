@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createServer, type Server } from 'node:http';
 import { mkdtemp, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { createServer, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { run } from '../../src/cli/main.js';
 import { PETSTORE_SPEC } from '../fixtures/petstore.js';
 

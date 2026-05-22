@@ -2,7 +2,7 @@
 
 TypeScript CLI for turning MCP servers, OpenAPI specs, and GraphQL endpoints into runtime CLIs with no codegen.
 
-Built test-first with pnpm, TypeScript, Vitest, and Zod. Runtime: Node.js 20+ ESM.
+Built test-first with pnpm, TypeScript/tsgo, Vitest, and Zod. Runtime: Node.js 26+ ESM.
 
 ## Quick start
 

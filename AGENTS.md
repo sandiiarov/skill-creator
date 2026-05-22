@@ -4,9 +4,9 @@ Guidance for coding agents working in this repository.
 
 ## Project overview
 
-- Package: `skill-creator`
+- Package: `@asnd/skill-creator` (CLI binary: `skill-creator`)
 - Purpose: TypeScript CLI that turns MCP servers, OpenAPI specs, and GraphQL endpoints into runtime CLIs without code generation.
-- Runtime: Node.js >= 20, ESM modules.
+- Runtime: Node.js >= 26, ESM modules.
 - Package manager: pnpm.
 
 ## Useful commands

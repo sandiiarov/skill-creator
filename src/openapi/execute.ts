@@ -1,6 +1,8 @@
 import ky from 'ky';
-import { collectOpenApiParams } from './params.js';
+
 import type { CommandDef } from '../core/types.js';
+
+import { collectOpenApiParams } from './params.js';
 
 export type ExecuteOpenApiOptions = {
   baseUrl: string;

@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto';
 import * as cacache from 'cacache';
+import { createHash } from 'node:crypto';
 
 const CACHE_IGNORED_FIELDS = new Set([
   'cacheTtl',

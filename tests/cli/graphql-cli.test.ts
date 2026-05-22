@@ -1,10 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createServer, type Server } from 'node:http';
+import { buildSchema, graphql, introspectionFromSchema, printSchema } from 'graphql';
 import { mkdtemp, writeFile } from 'node:fs/promises';
+import { createServer, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { buildSchema, graphql, introspectionFromSchema, printSchema } from 'graphql';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { run } from '../../src/cli/main.js';
 
 const schema = buildSchema(`

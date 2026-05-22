@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { mkdtemp } from 'node:fs/promises';
 import * as cacache from 'cacache';
+import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
 import { cacheKeyFor, loadCached, saveCache } from '../../src/core/cache.js';
 
 describe('cacheKeyFor', () => {

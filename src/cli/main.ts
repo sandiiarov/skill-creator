@@ -5,19 +5,21 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+
+import type { CommandDef } from '../core/types.js';
+
 import { cacheKeyFor, loadCached, saveCache } from '../core/cache.js';
 import { coerceAndValidateValue } from '../core/coerce.js';
 import { resolveSecret } from '../core/secrets.js';
 import { executeGraphql } from '../graphql/execute.js';
 import { extractGraphqlCommands } from '../graphql/extract.js';
 import { loadGraphqlSchema } from '../graphql/load.js';
-import { loadOpenApiSpec, type OpenApiSpec } from '../openapi/load.js';
-import { extractOpenApiCommands } from '../openapi/extract.js';
-import { executeOpenApi } from '../openapi/execute.js';
 import { extractMcpCommands } from '../mcp/extract.js';
 import { callHttpTool, listHttpTools, type McpHttpTransport } from '../mcp/http.js';
 import { callStdioTool, listStdioTools, type McpTool } from '../mcp/stdio.js';
-import type { CommandDef } from '../core/types.js';
+import { executeOpenApi } from '../openapi/execute.js';
+import { extractOpenApiCommands } from '../openapi/extract.js';
+import { loadOpenApiSpec, type OpenApiSpec } from '../openapi/load.js';
 import { runDynamicMode } from './dynamic.js';
 import { splitAtSubcommand } from './parse.js';
 

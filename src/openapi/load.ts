@@ -1,6 +1,7 @@
-import { readFile } from 'node:fs/promises';
 import ky from 'ky';
+import { readFile } from 'node:fs/promises';
 import YAML from 'yaml';
+
 import { cacheKeyFor, loadCached, saveCache } from '../core/cache.js';
 import { resolveRefs } from './refs.js';
 

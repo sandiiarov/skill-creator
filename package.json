@@ -30,15 +30,15 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "tsup",
+    "build": "tsgo -p tsconfig.build.json",
     "dev": "tsx src/cli/main.ts",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
+    "lint:fix": "oxlint --fix --fix-suggestions --fix-dangerously",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^14.2.1",
@@ -61,16 +61,16 @@
   "devDependencies": {
     "@types/cacache": "^20.0.1",
     "@types/node": "^24.10.1",
+    "@typescript/native-preview": "7.0.0-dev.20260521.1",
     "execa": "^9.6.0",
     "oxfmt": "^0.51.0",
     "oxlint": "^1.66.0",
-    "tsup": "^8.5.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.14"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=26"
   },
   "packageManager": "pnpm@10.1.0",
   "pi": {

@@ -1,6 +1,7 @@
+import type { CommandDef, JsonSchema, ParamDef, ParamLocation } from '../core/types.js';
+
 import { schemaTypeToCliType } from '../core/coerce.js';
 import { toKebab } from '../core/names.js';
-import type { CommandDef, JsonSchema, ParamDef, ParamLocation } from '../core/types.js';
 
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'delete', 'patch']);
 

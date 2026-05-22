@@ -12,8 +12,10 @@ import {
   type VariableDefinitionNode,
 } from 'graphql';
 import { ClientError, GraphQLClient } from 'graphql-request';
-import { coerceAndValidateValue } from '../core/coerce.js';
+
 import type { CommandDef } from '../core/types.js';
+
+import { coerceAndValidateValue } from '../core/coerce.js';
 import { buildGraphqlSelectionSet } from './extract.js';
 
 export type ExecuteGraphqlOptions = {

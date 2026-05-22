@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { extractOpenApiCommands } from '../../src/openapi/extract.js';
 import { PETSTORE_SPEC } from '../fixtures/petstore.js';
 

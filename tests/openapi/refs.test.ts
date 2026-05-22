@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { resolveRefs } from '../../src/openapi/refs.js';
 import { PETSTORE_SPEC_WITH_REFS } from '../fixtures/petstore.js';
 

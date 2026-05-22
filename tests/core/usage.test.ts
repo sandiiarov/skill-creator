@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest';
 import { mkdtemp } from 'node:fs/promises';
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { sourceHashFor, UsageStore } from '../../src/core/usage.js';
-import { sortCommands } from '../../src/core/listing.js';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
 import type { CommandDef } from '../../src/core/types.js';
+
+import { sortCommands } from '../../src/core/listing.js';
+import { sourceHashFor, UsageStore } from '../../src/core/usage.js';
 
 function commands(names: string[]): CommandDef[] {
   return names.map((name) => ({ name, toolName: name, params: [] }));

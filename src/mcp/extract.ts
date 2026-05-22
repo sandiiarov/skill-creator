@@ -1,6 +1,7 @@
+import type { CommandDef, JsonSchema, ParamDef } from '../core/types.js';
+
 import { schemaTypeToCliType } from '../core/coerce.js';
 import { toKebab } from '../core/names.js';
-import type { CommandDef, JsonSchema, ParamDef } from '../core/types.js';
 
 type McpToolLike = {
   name: string;

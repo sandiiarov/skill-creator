@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { collectOpenApiParams } from '../../src/openapi/params.js';
+
 import type { CommandDef } from '../../src/core/types.js';
+
+import { collectOpenApiParams } from '../../src/openapi/params.js';
 
 describe('collectOpenApiParams', () => {
   it('substitutes path params and coerces query params for GET', () => {

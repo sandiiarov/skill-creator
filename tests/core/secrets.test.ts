@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
 import { resolveSecret } from '../../src/core/secrets.js';
 
 describe('resolveSecret', () => {

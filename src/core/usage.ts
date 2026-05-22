@@ -1,6 +1,6 @@
+import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { createHash } from 'node:crypto';
 
 export type UsageEntry = {
   count: number;

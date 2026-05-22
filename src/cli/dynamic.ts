@@ -1,7 +1,9 @@
 import { parseArgs, type ParseArgsConfig } from 'node:util';
+
+import type { CommandDef } from '../core/types.js';
+
 import { filterCommands } from '../core/filter.js';
 import { formatOutput } from '../core/output.js';
-import type { CommandDef } from '../core/types.js';
 
 export type DynamicModeGlobals = {
   include?: string[];

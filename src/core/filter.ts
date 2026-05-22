@@ -1,4 +1,5 @@
 import { minimatch } from 'minimatch';
+
 import type { CommandDef } from './types.js';
 
 export type CommandFilters = {

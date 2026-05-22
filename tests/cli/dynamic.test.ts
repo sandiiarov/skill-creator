@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { parseCommandValues } from '../../src/cli/dynamic.js';
+
 import type { CommandDef } from '../../src/core/types.js';
+
+import { parseCommandValues } from '../../src/cli/dynamic.js';
 
 const command: CommandDef = {
   name: 'demo',

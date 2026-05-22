@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { splitAtSubcommand } from '../../src/cli/parse.js';
 
 const spec = {

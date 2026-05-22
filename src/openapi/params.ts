@@ -1,5 +1,6 @@
-import { coerceAndValidateValue } from '../core/coerce.js';
 import type { CommandDef } from '../core/types.js';
+
+import { coerceAndValidateValue } from '../core/coerce.js';
 
 export type CollectedOpenApiParams = {
   path: string;

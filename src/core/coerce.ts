@@ -1,5 +1,6 @@
 import { Ajv, type ErrorObject, type ValidateFunction } from 'ajv';
 import addFormatsPlugin from 'ajv-formats';
+
 import type { CliValueType, JsonSchema } from './types.js';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
