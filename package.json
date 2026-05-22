@@ -1,6 +1,6 @@
 {
   "name": "@asnd/skill-creator",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Turn any MCP server, OpenAPI spec, or GraphQL endpoint into a CLI at runtime.",
   "keywords": [
     "graphql",
@@ -19,7 +19,6 @@
     "url": "git+https://github.com/sandiiarov/skill-creator.git"
   },
   "bin": {
-    "sc": "dist/cli/main.js",
     "skill-creator": "dist/cli/main.js"
   },
   "files": [
