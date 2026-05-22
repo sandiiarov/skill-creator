@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
+import { realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { cacheKeyFor, loadCached, saveCache } from '../core/cache.js';
 import { coerceAndValidateValue } from '../core/coerce.js';
@@ -524,7 +526,18 @@ function writeStdout(text: string): void {
   console.log(text.replace(/\n$/, ''));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+export function isCliEntrypoint(metaUrl: string, argv1 = process.argv[1]): boolean {
+  if (!argv1) return false;
+
+  const modulePath = fileURLToPath(metaUrl);
+  try {
+    return realpathSync(argv1) === realpathSync(modulePath);
+  } catch {
+    return resolve(argv1) === modulePath;
+  }
+}
+
+if (isCliEntrypoint(import.meta.url)) {
   const code = await run();
   process.exitCode = code;
 }
