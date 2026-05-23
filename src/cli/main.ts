@@ -8,6 +8,7 @@ import { parseArgs } from 'node:util';
 
 import type { CommandDef } from '../core/types.js';
 
+import { runInstallCommand } from '../commands/install.js';
 import { cacheKeyFor, loadCached, saveCache } from '../core/cache.js';
 import { coerceAndValidateValue } from '../core/coerce.js';
 import { resolveSecret } from '../core/secrets.js';
@@ -20,6 +21,7 @@ import { callStdioTool, listStdioTools, type McpTool } from '../mcp/stdio.js';
 import { executeOpenApi } from '../openapi/execute.js';
 import { extractOpenApiCommands } from '../openapi/extract.js';
 import { loadOpenApiSpec, type OpenApiSpec } from '../openapi/load.js';
+import { runGenerate } from '../skills/generate.js';
 import { runDynamicMode } from './dynamic.js';
 import { splitAtSubcommand } from './parse.js';
 
@@ -75,6 +77,27 @@ type GlobalArgs = {
 
 export async function run(argv = process.argv.slice(2)): Promise<number> {
   if (argv[0] === '--') argv = argv.slice(1);
+
+  if (argv[0] === 'generate') {
+    try {
+      await runGenerate(argv.slice(1));
+      return 0;
+    } catch (error) {
+      console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      return 1;
+    }
+  }
+
+  if (argv[0] === 'command' || argv[0] === 'commands' || argv[0] === 'install-command') {
+    try {
+      await runInstallCommand(argv.slice(1));
+      return 0;
+    } catch (error) {
+      console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      return 1;
+    }
+  }
+
   const { globalArgv, commandArgv } = splitAtSubcommand(argv, GLOBAL_OPTION_SPEC);
   const globals = parseGlobalArgs(globalArgv);
 
@@ -492,7 +515,9 @@ function defaultCacheDir(): string {
 }
 
 function printHelp(): void {
-  writeStdout(`skill-creator [global options] <subcommand> [command options]
+  writeStdout(`npx @asnd/skill-creator [global options] <subcommand> [command options]
+npx @asnd/skill-creator generate --template openapi --name NAME --spec URL|FILE --agent AGENT --scope project|global
+npx @asnd/skill-creator command install --agent AGENT --scope project|global
 
 Source (mutually exclusive, one required):
   --spec URL|FILE       OpenAPI spec (JSON or YAML, local or remote)

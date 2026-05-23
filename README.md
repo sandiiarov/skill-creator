@@ -1,169 +1,108 @@
 # skill-creator
 
-TypeScript CLI for turning MCP servers, OpenAPI specs, and GraphQL endpoints into runtime CLIs with no codegen.
+Give an AI agent a link to an OpenAPI spec, GraphQL schema, or MCP server and get back a ready-to-use Agent Skill with wrapper scripts, references, and usage notes.
 
-Built test-first with pnpm, TypeScript/tsgo, Vitest, and Zod. Runtime: Node.js 26+ ESM.
+Instead of pasting API docs into every chat, install one slash command and let your agent create reusable command-line skills for the tools your team uses.
 
-## Quick start
+## Install
 
-```bash
-pnpm install
-pnpm build
-node dist/cli/main.js --help
-```
-
-Development:
+Install the `/skill-creator` command with `npx`:
 
 ```bash
-pnpm dev -- --help
+npx @asnd/skill-creator command install --agent pi --scope global
 ```
 
-## Sources
-
-Exactly one source is required:
+For a project-local command:
 
 ```bash
-# OpenAPI
-skill-creator --spec ./openapi.json --list
-skill-creator --spec https://petstore3.swagger.io/api/v3/openapi.json --list
-
-# MCP over Streamable HTTP or SSE
-skill-creator --mcp https://api.example.com/mcp --list
-
-# MCP over stdio
-skill-creator --mcp-stdio "npx -y @modelcontextprotocol/server-filesystem /tmp" --list
-
-# GraphQL
-skill-creator --graphql https://beta.pokeapi.co/graphql/v1beta --list
+npx @asnd/skill-creator command install --agent pi --scope project
 ```
 
-## Useful global options
+Other supported agents include `claude-code`, `codex`, `cursor`, `opencode`, `gemini-cli`, `github-copilot`, `cline`, and `windsurf`.
+
+```bash
+npx @asnd/skill-creator command install --agent claude-code --scope project
+```
+
+## Use it
+
+Open your agent and run `/skill-creator` with the source you want to turn into a skill.
 
 ```txt
---auth-header K:V       HTTP header; values support env:NAME and file:/path
---transport TYPE        MCP HTTP transport: auto|streamable|sse (default: auto)
---include GLOBS         Include command globs, comma-separated
---exclude GLOBS         Exclude command globs, comma-separated
---methods METHODS       OpenAPI method filter, e.g. GET,POST
---graphql-schema SRC    GraphQL SDL or introspection JSON schema FILE|URL
---cache-ttl SECONDS     Cache TTL for remote specs, MCP tools, GraphQL schemas
---refresh               Bypass cache
---search PATTERN        Search commands/tools
---fields FIELDS         GraphQL selection override
---selection-depth N     GraphQL default selection depth (default: 2)
---stdin                 Read GraphQL variables from stdin JSON
---pretty                Pretty-print JSON
---raw                   Print raw response body
---head N                Limit arrays to first N records
+/skill-creator https://example.com/openapi.json
 ```
 
-## Recipes
+That is the normal flow: provide the spec/server/schema link, answer any missing install questions, and the agent creates the skill for you.
 
-### GitHub remote MCP
+More examples:
 
-GitHub's hosted MCP endpoint works with PAT-style auth headers. Prefer `env:` so tokens are not passed literally in shell history or process listings.
-
-```bash
-export GITHUB_MCP_PAT="Bearer $(gh auth token)"
-
-node dist/cli/main.js \
-  --mcp https://api.githubcopilot.com/mcp/x/repos/readonly \
-  --auth-header Authorization:env:GITHUB_MCP_PAT \
-  --list
-
-node dist/cli/main.js \
-  --mcp https://api.githubcopilot.com/mcp/x/repos/readonly \
-  --auth-header Authorization:env:GITHUB_MCP_PAT \
-  get-file-contents \
-  --owner github \
-  --repo github-mcp-server \
-  --path README.md
+```txt
+/skill-creator --spec https://example.com/openapi.json --name youtube --agent pi --scope project
+/skill-creator --graphql https://api.example.com/graphql --graphql-schema https://example.com/schema.graphql --name pokeapi
+/skill-creator --mcp https://mcp.example.com/mcp --name context7
+/skill-creator --mcp-stdio "npx -y @example/mcp-server" --name example-mcp
 ```
 
-### Filesystem MCP over stdio
+## What it creates
 
-On some current npm installs the filesystem server needs `ajv` supplied explicitly:
+A generated skill looks like this:
 
-```bash
-pnpm dev -- --mcp-stdio \
-  "npx -y -p ajv -p @modelcontextprotocol/server-filesystem mcp-server-filesystem /tmp" \
-  --list
-
-printf 'hello from filesystem mcp\n' > /tmp/skill-creator-test.txt
-
-pnpm dev -- --mcp-stdio \
-  "npx -y -p ajv -p @modelcontextprotocol/server-filesystem mcp-server-filesystem /tmp" \
-  read-text-file --path /private/tmp/skill-creator-test.txt
+```txt
+.pi/skills/youtube/
+├── SKILL.md
+├── scripts/
+│   └── youtube
+└── references/
+    └── openapi-spec-MM-DD-YYYY.json
 ```
 
-On macOS, `/tmp` resolves to `/private/tmp`; use the resolved path if the server reports an allowed-directory error.
-
-### PokeAPI GraphQL
+Future agents can then use simple commands instead of reading API docs from scratch:
 
 ```bash
-node dist/cli/main.js \
-  --graphql https://beta.pokeapi.co/graphql/v1beta \
-  --list
-
-node dist/cli/main.js \
-  --graphql https://beta.pokeapi.co/graphql/v1beta \
-  --fields "id name" \
-  pokemon-v2-pokemon \
-  --limit 3
-
-node dist/cli/main.js \
-  --graphql https://beta.pokeapi.co/graphql/v1beta \
-  --fields "id name height weight" \
-  pokemon-v2-pokemon-by-pk \
-  --id 25
+./scripts/youtube --list
+./scripts/youtube --search videos
+./scripts/youtube <command> --help
+./scripts/youtube --pretty <command> <flags>
 ```
 
-GraphQL variables can also come from stdin:
+Generated scripts use `npx -y @asnd/skill-creator` internally, so consumers do not need a global install.
+
+## Shell usage
+
+If you want to generate a skill directly from the shell or CI, use the same package with `npx`:
 
 ```bash
-echo '{"limit": 3}' | node dist/cli/main.js \
-  --graphql https://beta.pokeapi.co/graphql/v1beta \
-  pokemon-v2-pokemon \
-  --stdin
+npx @asnd/skill-creator generate \
+  --template openapi \
+  --name youtube \
+  --spec https://example.com/openapi.json \
+  --agent pi \
+  --scope project
 ```
 
-### GraphQL endpoints without introspection
-
-By default, `--graphql` introspects the endpoint to discover commands. If introspection is disabled, provide a schema SDL file or introspection JSON file/URL:
+GraphQL and MCP are supported too:
 
 ```bash
-node dist/cli/main.js \
+npx @asnd/skill-creator generate \
+  --template graphql \
+  --name pokeapi \
   --graphql https://api.example.com/graphql \
   --graphql-schema ./schema.graphql \
-  --list
+  --agent pi \
+  --scope project
 
-node dist/cli/main.js \
-  --graphql https://api.example.com/graphql \
-  --graphql-schema ./introspection.json \
-  users --limit 10
+npx @asnd/skill-creator generate \
+  --template mcp-http \
+  --name context7 \
+  --mcp https://mcp.example.com/mcp \
+  --agent pi \
+  --scope project
 ```
 
-If no schema is provided and introspection fails, skill-creator tries a stale cached schema for that endpoint. If no cache exists, it fails with an actionable `--graphql-schema` message.
+## Why use it?
 
-### Filtering command lists
-
-```bash
-# Only list read operations from an OpenAPI spec
-skill-creator --spec ./openapi.json --methods GET --list
-
-# Include/exclude by command name
-skill-creator --graphql https://beta.pokeapi.co/graphql/v1beta \
-  --include 'pokemon-v2-pokemon*' \
-  --exclude '*aggregate' \
-  --list
-```
-
-## Checks
-
-```bash
-pnpm typecheck
-pnpm test
-pnpm lint
-pnpm fmt:check
-pnpm build
-```
+- One command turns API sources into reusable agent skills.
+- Specs and schemas are saved as references, so future runs are reproducible.
+- Wrapper scripts expose discoverable commands with `--list`, `--search`, and `--help`.
+- Secrets stay in environment variables or files, not in generated docs.
+- Future agents get focused instructions, gotchas, and safe usage patterns instead of a giant pasted spec.
