@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { splitCommandLine } from '../../src/mcp/stdio.js';
+import { splitCommandLine } from './stdio.js';
 
 describe('splitCommandLine', () => {
   it('splits stdio command lines with quoted arguments', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveRefs } from '../../src/openapi/refs.js';
-import { PETSTORE_SPEC_WITH_REFS } from '../fixtures/petstore.js';
+import { PETSTORE_SPEC_WITH_REFS } from '../test-fixtures/petstore.js';
+import { resolveRefs } from './refs.js';
 
 describe('resolveRefs', () => {
   it('resolves local JSON pointer refs without mutating input', async () => {

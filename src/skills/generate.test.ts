@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { run } from '../../src/cli/main.js';
-import { resolveAgentSkillDir } from '../../src/skills/agents.js';
-import { PETSTORE_SPEC } from '../fixtures/petstore.js';
+import { run } from '../cli/main.js';
+import { PETSTORE_SPEC } from '../test-fixtures/petstore.js';
+import { resolveAgentSkillDir } from './agents.js';
 
 let stdout = '';
 let stderr = '';
@@ -87,10 +87,21 @@ describe('generate openapi skill', () => {
     const references = await readdir(join(skillDir, 'references'));
     const specFile = references.find((name) => name.startsWith('openapi-spec-'));
 
-    expect(skillMd).toContain('---\nname: youtube\n');
-    expect(skillMd).toContain('description: Use YouTube API');
-    expect(skillMd).toContain('./scripts/youtube --list');
+    expectSkillFrontmatter(skillMd, {
+      name: 'youtube',
+      descriptionPrefix: 'Use YouTube API commands',
+    });
+    expect(skillMd).toContain('## Start here\n\n```bash\n./scripts/youtube commands list');
+    expect(skillMd).toContain(
+      '## Usage rules\n\n- Run discovery before calling operations: `commands list`, `commands search`, then `commands help <command>`.',
+    );
+    expect(skillMd).toContain('Execute operations with `run <command>`.');
+    expect(skillMd).toContain('## Output control');
+    expect(skillMd).toContain('## Safety');
     expect(skillMd).toContain('references/openapi-spec-');
+    expect(script).toMatch(/^#!\/usr\/bin\/env bash\n/);
+    expect(script).not.toContain('python');
+    expect(script).not.toContain('tsx');
     expect(script).toContain('exec npx -y @asnd/skill-creator \\');
     expect(script).toContain('--spec "${SKILL_DIR}/references/openapi-spec-');
     expect(specFile).toMatch(/^openapi-spec-\d{2}-\d{2}-\d{4}\.json$/);
@@ -99,6 +110,42 @@ describe('generate openapi skill', () => {
     expect(savedSpec).toEqual(PETSTORE_SPEC);
     expect((await stat(join(skillDir, 'scripts/youtube'))).mode & 0o111).not.toBe(0);
     expect(stdout).toContain('.pi/skills/youtube');
+  });
+
+  it('puts auth environment variables in requirements, not setup prose', async () => {
+    const { cwd, specPath } = await createProject();
+    process.chdir(cwd);
+
+    const code = await run([
+      'generate',
+      '--template',
+      'openapi',
+      '--name',
+      'exa-public-api',
+      '--spec',
+      specPath,
+      '--auth-header',
+      'x-api-key:env:EXA_API_KEY',
+      '--agent',
+      'pi',
+      '--scope',
+      'project',
+      '--no-test',
+    ]);
+
+    expect(code).toBe(0);
+    const skillMd = await readFile(join(cwd, '.pi/skills/exa-public-api/SKILL.md'), 'utf8');
+    const frontmatter = skillMd.slice(0, skillMd.indexOf('\n---', 4));
+
+    expect(frontmatter).toBe(
+      '---\nname: exa-public-api\ndescription: Use Exa Public API commands from a bundled OpenAPI spec. Use when the user needs to list, inspect, test, or call Exa Public API operations from the command line.',
+    );
+    expect(skillMd).toContain(
+      '## Requirements\n\n- `EXA_API_KEY` must be available in the environment for `x-api-key` auth.',
+    );
+    expect(skillMd).not.toContain('## Setup and auth');
+    expect(skillMd).not.toContain('export EXA_API_KEY');
+    expect(skillMd).not.toContain('wrapper-auth flags');
   });
 
   it('supports the requested "agent pi" positional form', async () => {
@@ -229,7 +276,7 @@ describe('generate openapi skill', () => {
     expect(script).toContain('--mcp "https://mcp.example.com/mcp" \\');
     expect(script).toContain('--auth-header "Authorization:env:MCP_TOKEN" \\');
     expect(skillMd).toContain('# Context7 MCP');
-    expect(skillMd).toContain('./scripts/context7 --list');
+    expect(skillMd).toContain('./scripts/context7 commands list');
   });
 
   it('creates an MCP stdio skill without a references directory', async () => {
@@ -313,3 +360,27 @@ describe('generate openapi skill', () => {
     expect(stderr).toContain('--scope');
   });
 });
+
+function expectSkillFrontmatter(
+  skillMd: string,
+  expected: { name: string; descriptionPrefix: string },
+): void {
+  const match = /^---\n(?<frontmatter>[\s\S]*?)\n---\n/.exec(skillMd);
+  expect(match).not.toBeNull();
+  const frontmatter = match?.groups?.frontmatter ?? '';
+  const entries = frontmatter.split('\n').map((line) => {
+    const separator = line.indexOf(':');
+    expect(separator).toBeGreaterThan(0);
+    return [line.slice(0, separator), line.slice(separator + 1).trim()] as const;
+  });
+
+  expect(entries.map(([key]) => key)).toEqual(['name', 'description']);
+  expect(Object.fromEntries(entries)).toMatchObject({
+    name: expected.name,
+    description: expect.stringMatching(new RegExp(`^${escapeRegExp(expected.descriptionPrefix)}`)),
+  });
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}

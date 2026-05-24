@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { resolveSecret } from '../../src/core/secrets.js';
+import { resolveSecret } from './secrets.js';
 
 describe('resolveSecret', () => {
   it('returns literal values', async () => {

@@ -59,10 +59,10 @@ A generated skill looks like this:
 Future agents can then use simple commands instead of reading API docs from scratch:
 
 ```bash
-./scripts/youtube --list
-./scripts/youtube --search videos
-./scripts/youtube <command> --help
-./scripts/youtube --pretty <command> <flags>
+./scripts/youtube commands list
+./scripts/youtube commands search videos
+./scripts/youtube commands help <command>
+./scripts/youtube run --pretty <command> <flags>
 ```
 
 Generated scripts use `npx -y @asnd/skill-creator` internally, so consumers do not need a global install.
@@ -103,6 +103,6 @@ npx @asnd/skill-creator generate \
 
 - One command turns API sources into reusable agent skills.
 - Specs and schemas are saved as references, so future runs are reproducible.
-- Wrapper scripts expose discoverable commands with `--list`, `--search`, and `--help`.
+- Wrapper scripts expose discoverable commands with `commands list`, `commands search`, and `commands help`.
 - Secrets stay in environment variables or files, not in generated docs.
 - Future agents get focused instructions, gotchas, and safe usage patterns instead of a giant pasted spec.

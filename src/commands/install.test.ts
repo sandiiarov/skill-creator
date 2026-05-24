@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { run } from '../../src/cli/main.js';
-import { commandFileNameForAgent, resolveAgentCommandDir } from '../../src/commands/agents.js';
+import { run } from '../cli/main.js';
+import { commandFileNameForAgent, resolveAgentCommandDir } from './agents.js';
 
 let stdout = '';
 let stderr = '';
@@ -170,9 +170,19 @@ describe('command install', () => {
 
     expect(code).toBe(0);
     const installed = await readFile(join(cwd, '.pi/prompts/skill-creator.md'), 'utf8');
-    expect(installed).toContain('# Task: create a reusable agent command surface');
-    expect(installed).toContain('not for one-off API calls');
+    expect(installed).toContain('# Task: create a reusable agent skill');
+    expect(installed).toContain('The CLI generator creates a scaffold.');
+    expect(installed).toContain(
+      'Always ask the user for install scope when `--scope project|global` is not explicitly provided.',
+    );
     expect(installed).toContain('npx @asnd/skill-creator generate');
+    expect(installed).toContain('After generation, read:');
+    expect(installed).toContain('Rewrite the generated `SKILL.md`; do not merely append notes.');
+    expect(installed).toContain('From the generated skill directory, run discovery/help first:');
+    expect(installed).toContain('commands list');
+    expect(installed).toContain('commands search');
+    expect(installed).toContain('commands help');
+    expect(installed).toContain('run --pretty');
     expect(installed).not.toContain('/skill:skill-creator');
     expect(stdout).toContain('Installed command: skill-creator');
   });

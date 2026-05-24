@@ -11,6 +11,9 @@ export type DynamicModeGlobals = {
   methods?: string[];
   list: boolean;
   search?: string;
+  fields?: string;
+  selectionDepth?: number;
+  stdin?: boolean;
   pretty: boolean;
   raw: boolean;
   head?: number;
@@ -57,21 +60,143 @@ export async function runDynamicMode(options: RunDynamicModeOptions): Promise<vo
     return;
   }
 
-  const commandName = options.commandArgv[0];
-  if (commandName === undefined) throw new Error('missing subcommand');
+  if (options.commandArgv[0] === 'commands') {
+    handleCommandsNamespace(options, commands, options.commandArgv.slice(1));
+    return;
+  }
 
-  const command = commands.find((candidate) => candidate.name === commandName);
-  if (command === undefined) throw new Error(`unknown subcommand: ${commandName}`);
+  if (options.commandArgv[0] === 'run') {
+    const parsed = parseRunNamespace(options.commandArgv.slice(1));
+    Object.assign(options.globals, parsed.globals);
+    await executeDynamicCommand(options, commands, parsed.commandArgv);
+    return;
+  }
 
-  if (options.commandArgv.includes('--help') || options.commandArgv.includes('-h')) {
+  await executeDynamicCommand(options, commands, options.commandArgv);
+}
+
+function handleCommandsNamespace(
+  options: RunDynamicModeOptions,
+  commands: CommandDef[],
+  argv: string[],
+): void {
+  const action = argv[0];
+  if (action === undefined) throw new Error('missing commands action: use list, search, or help');
+
+  if (action === 'list') {
+    writeStdout(options.renderCommands(commands));
+    return;
+  }
+
+  if (action === 'search') {
+    const pattern = argv[1];
+    if (pattern === undefined) throw new Error('missing search pattern');
+    writeStdout(options.renderCommands(searchCommands(commands, pattern)));
+    return;
+  }
+
+  if (action === 'help') {
+    const commandName = argv[1];
+    if (commandName === undefined) throw new Error('missing command name for commands help');
+    const command = findCommand(commands, commandName);
     writeStdout(renderCommandHelp(command));
     return;
   }
 
-  const prepared = await prepareCommandArgs(options, options.commandArgv.slice(1));
+  throw new Error(`unknown commands action: ${action}`);
+}
+
+async function executeDynamicCommand(
+  options: RunDynamicModeOptions,
+  commands: CommandDef[],
+  commandArgv: string[],
+): Promise<void> {
+  const commandName = commandArgv[0];
+  if (commandName === undefined) throw new Error('missing subcommand');
+
+  const command = findCommand(commands, commandName);
+
+  if (commandArgv.includes('--help') || commandArgv.includes('-h')) {
+    writeStdout(renderCommandHelp(command));
+    return;
+  }
+
+  const prepared = await prepareCommandArgs(options, commandArgv.slice(1));
   const values = parseCommandValues(command, prepared.argv, prepared.initialValues ?? {});
   const result = await options.executeCommand(command, values, prepared.argv);
   writeFormattedOutput(result, options.globals);
+}
+
+function findCommand(commands: CommandDef[], name: string): CommandDef {
+  const command = commands.find((candidate) => candidate.name === name);
+  if (command === undefined) throw new Error(`unknown subcommand: ${name}`);
+  return command;
+}
+
+function parseRunNamespace(argv: string[]): {
+  globals: Partial<DynamicModeGlobals>;
+  commandArgv: string[];
+} {
+  const globalArgv: string[] = [];
+  let index = 0;
+
+  while (index < argv.length) {
+    const token = argv[index];
+    if (token === undefined) break;
+    if (!token.startsWith('-')) break;
+
+    const option = token.includes('=') ? token.slice(0, token.indexOf('=')) : token;
+    if (option === '--pretty' || option === '--raw' || option === '--stdin') {
+      globalArgv.push(token);
+      index += 1;
+      continue;
+    }
+
+    if (option === '--head' || option === '--fields' || option === '--selection-depth') {
+      globalArgv.push(token);
+      if (!token.includes('=')) {
+        const value = argv[index + 1];
+        if (value === undefined) throw new Error(`missing value for ${option}`);
+        globalArgv.push(value);
+        index += 2;
+      } else {
+        index += 1;
+      }
+      continue;
+    }
+
+    throw new Error(
+      `unknown run option ${option}; wrapper run options must appear before the command, command options after it`,
+    );
+  }
+
+  const { values } = parseArgs({
+    args: globalArgv,
+    options: {
+      pretty: { type: 'boolean' },
+      raw: { type: 'boolean' },
+      stdin: { type: 'boolean' },
+      head: { type: 'string' },
+      fields: { type: 'string' },
+      'selection-depth': { type: 'string' },
+    },
+    strict: true,
+    allowPositionals: false,
+  });
+
+  return {
+    globals: {
+      ...(values.pretty === true ? { pretty: true } : {}),
+      ...(values.raw === true ? { raw: true } : {}),
+      ...(values.stdin === true ? { stdin: true } : {}),
+      ...(typeof values.head === 'string' ? { head: Number.parseInt(values.head, 10) } : {}),
+      ...(typeof values.fields === 'string' ? { fields: values.fields } : {}),
+      ...(typeof values['selection-depth'] === 'string'
+        ? { selectionDepth: Number.parseInt(values['selection-depth'], 10) }
+        : {}),
+    },
+    commandArgv: argv.slice(index),
+  };
 }
 
 function searchCommands(commands: CommandDef[], search: string): CommandDef[] {

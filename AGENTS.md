@@ -25,7 +25,8 @@ Guidance for coding agents working in this repository.
 - `src/cli/` - CLI entrypoint and argument parsing.
 - `src/core/` - shared runtime utilities, types, output, filtering, caching, and secret handling.
 - `src/openapi/` - OpenAPI loading, reference resolution, parameter handling, extraction, and execution.
-- `tests/` - Vitest tests.
+- `src/**/*.test.ts` - Vitest tests colocated next to the source they cover.
+- `src/test-fixtures/` - shared test fixtures.
 - `dist/` - build output; do not edit manually.
 
 ## Coding guidelines

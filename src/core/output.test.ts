@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyHead, formatOutput } from '../../src/core/output.js';
+import { applyHead, formatOutput } from './output.js';
 
 describe('applyHead', () => {
   it('truncates arrays and leaves non-arrays unchanged', () => {

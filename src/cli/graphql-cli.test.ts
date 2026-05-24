@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { run } from '../../src/cli/main.js';
+import { run } from './main.js';
 
 const schema = buildSchema(`
   type Profile {
@@ -33,8 +33,20 @@ const schema = buildSchema(`
 `);
 
 const users = [
-  { id: '1', name: 'Alice', email: 'alice@example.com', age: 31, profile: { city: 'Pallet' } },
-  { id: '2', name: 'Bob', email: 'bob@example.com', age: 42, profile: { city: 'Cerulean' } },
+  {
+    id: '1',
+    name: 'Alice',
+    email: 'alice@example.com',
+    age: 31,
+    profile: { city: 'Pallet' },
+  },
+  {
+    id: '2',
+    name: 'Bob',
+    email: 'bob@example.com',
+    age: 42,
+    profile: { city: 'Cerulean' },
+  },
 ];
 
 let stdout = '';
@@ -56,7 +68,10 @@ beforeEach(() => {
 
 afterEach(() => {
   delete process.env.SKILL_CREATOR_CACHE_DIR;
-  Object.defineProperty(process, 'stdin', { value: originalStdin, configurable: true });
+  Object.defineProperty(process, 'stdin', {
+    value: originalStdin,
+    configurable: true,
+  });
   logSpy.mockRestore();
   errorSpy.mockRestore();
 });
@@ -65,10 +80,26 @@ describe('GraphQL CLI mode', () => {
   it('lists commands from a GraphQL endpoint', async () => {
     const server = await startGraphqlServer();
     try {
-      const code = await run(['--graphql', server.url, '--list']);
+      const code = await run(['--graphql', server.url, 'commands', 'list']);
       expect(code).toBe(0);
       expect(stdout).toContain('users');
       expect(stdout).toContain('create-user');
+    } finally {
+      await server.close();
+    }
+  });
+
+  it('searches commands and renders GraphQL operation help through the commands namespace', async () => {
+    const server = await startGraphqlServer();
+    try {
+      expect(await run(['--graphql', server.url, 'commands', 'search', 'create'])).toBe(0);
+      expect(stdout).toContain('create-user');
+      expect(stdout).not.toContain('ping');
+
+      stdout = '';
+      expect(await run(['--graphql', server.url, 'commands', 'help', 'users'])).toBe(0);
+      expect(stdout).toContain('users:');
+      expect(stdout).toContain('--limit');
     } finally {
       await server.close();
     }
@@ -107,6 +138,7 @@ describe('GraphQL CLI mode', () => {
         server.url,
         '--graphql-schema',
         schemaPath,
+        'run',
         'users',
         '--limit',
         '1',
@@ -170,7 +202,7 @@ describe('GraphQL CLI mode', () => {
   it('executes a query with variables', async () => {
     const server = await startGraphqlServer();
     try {
-      const code = await run(['--graphql', server.url, 'users', '--limit', '1']);
+      const code = await run(['--graphql', server.url, 'run', 'users', '--limit', '1']);
       expect(code).toBe(0);
       expect(JSON.parse(stdout)).toEqual([users[0]]);
     } finally {
@@ -184,6 +216,7 @@ describe('GraphQL CLI mode', () => {
       const code = await run([
         '--graphql',
         server.url,
+        'run',
         '--selection-depth',
         '1',
         'users',
@@ -205,6 +238,7 @@ describe('GraphQL CLI mode', () => {
       const code = await run([
         '--graphql',
         server.url,
+        'run',
         'create-user',
         '--name',
         'Charlie',
@@ -232,7 +266,7 @@ describe('GraphQL CLI mode', () => {
     });
     const server = await startGraphqlServer();
     try {
-      const code = await run(['--graphql', server.url, 'create-user', '--stdin']);
+      const code = await run(['--graphql', server.url, 'run', '--stdin', 'create-user']);
       expect(code).toBe(0);
       expect(JSON.parse(stdout)).toMatchObject({
         id: '3',
@@ -248,7 +282,16 @@ describe('GraphQL CLI mode', () => {
   it('supports explicit GraphQL selection fields', async () => {
     const server = await startGraphqlServer();
     try {
-      const code = await run(['--graphql', server.url, '--fields', 'id name', 'user', '--id', '1']);
+      const code = await run([
+        '--graphql',
+        server.url,
+        'run',
+        '--fields',
+        'id name',
+        'user',
+        '--id',
+        '1',
+      ]);
       expect(code).toBe(0);
       expect(JSON.parse(stdout)).toEqual({ id: '1', name: 'Alice' });
     } finally {
@@ -281,7 +324,10 @@ async function startGraphqlServer(options: { introspectionEnabled?: boolean } = 
     });
     req.on('end', () => {
       void (async () => {
-        const body = JSON.parse(raw) as { query: string; variables?: Record<string, unknown> };
+        const body = JSON.parse(raw) as {
+          query: string;
+          variables?: Record<string, unknown>;
+        };
         if (!introspectionEnabled && isIntrospectionQuery(body.query)) {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ errors: [{ message: 'introspection disabled' }] }));

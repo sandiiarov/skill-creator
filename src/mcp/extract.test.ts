@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractMcpCommands } from '../../src/mcp/extract.js';
+import { extractMcpCommands } from './extract.js';
 
 describe('extractMcpCommands', () => {
   it('converts MCP tools into command definitions', () => {

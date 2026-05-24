@@ -3,10 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import type { CommandDef } from '../../src/core/types.js';
+import type { CommandDef } from './types.js';
 
-import { sortCommands } from '../../src/core/listing.js';
-import { sourceHashFor, UsageStore } from '../../src/core/usage.js';
+import { sortCommands } from './listing.js';
+import { sourceHashFor, UsageStore } from './usage.js';
 
 function commands(names: string[]): CommandDef[] {
   return names.map((name) => ({ name, toolName: name, params: [] }));

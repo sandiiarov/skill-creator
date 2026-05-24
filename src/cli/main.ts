@@ -165,7 +165,7 @@ async function handleOpenApiMode(globals: GlobalArgs, commandArgv: string[]): Pr
     renderCommands: renderOpenApiCommands,
     onEmptyCommand: () => {
       printHelp();
-      throw new Error('provide a subcommand, or use --list to see available commands');
+      throw new Error('provide a subcommand, or use commands list to see available commands');
     },
     executeCommand: async (command, values) => {
       const baseUrl = determineBaseUrl(spec, source, globals.baseUrl);
@@ -515,7 +515,10 @@ function defaultCacheDir(): string {
 }
 
 function printHelp(): void {
-  writeStdout(`npx @asnd/skill-creator [global options] <subcommand> [command options]
+  writeStdout(`npx @asnd/skill-creator [source options] commands list
+npx @asnd/skill-creator [source options] commands search PATTERN
+npx @asnd/skill-creator [source options] commands help NAME
+npx @asnd/skill-creator [source options] run [run options] NAME [command options]
 npx @asnd/skill-creator generate --template openapi --name NAME --spec URL|FILE --agent AGENT --scope project|global
 npx @asnd/skill-creator command install --agent AGENT --scope project|global
 
@@ -525,6 +528,14 @@ Source (mutually exclusive, one required):
   --mcp-stdio CMD       MCP server command (stdio transport)
   --graphql URL         GraphQL endpoint URL
 
+Discovery:
+  commands list         List available generated commands/tools
+  commands search TEXT  Search generated commands/tools by name or description
+  commands help NAME    Show help for a generated command/tool
+
+Execution:
+  run NAME [OPTIONS]    Execute a generated command/tool
+
 Options:
   --auth-header K:V     HTTP header (repeatable)
   --transport TYPE      MCP HTTP transport: auto|streamable|sse (default: auto)
@@ -533,8 +544,6 @@ Options:
   --cache-key KEY       Custom cache key
   --cache-ttl SECONDS   Cache TTL (default: 3600)
   --refresh             Bypass cache
-  --list                List available subcommands
-  --search PATTERN      Search commands by name or description
   --include GLOBS       Include command globs (comma-separated)
   --exclude GLOBS       Exclude command globs (comma-separated)
   --methods METHODS     OpenAPI method filter, e.g. GET,POST
@@ -544,6 +553,8 @@ Options:
   --pretty              Pretty-print JSON output
   --raw                 Print raw response body
   --head N              Limit output to first N array records
+  --list                Legacy alias for commands list
+  --search PATTERN      Legacy alias for commands search PATTERN
   --help, -h            Show help
   --version             Show version
 `);

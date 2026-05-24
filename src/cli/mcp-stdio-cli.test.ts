@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { run } from '../../src/cli/main.js';
+import { run } from './main.js';
 
 let stdout = '';
 let stderr = '';
 let logSpy: ReturnType<typeof vi.spyOn>;
 let errorSpy: ReturnType<typeof vi.spyOn>;
 
-const SERVER = join(process.cwd(), 'tests/fixtures/mcp-stdio-server.mjs');
+const SERVER = join(process.cwd(), 'src/test-fixtures/mcp-stdio-server.mjs');
 
 beforeEach(() => {
   stdout = '';
@@ -28,7 +28,7 @@ afterEach(() => {
 
 describe('MCP stdio CLI mode', () => {
   it('lists tools from a stdio MCP server', async () => {
-    const code = await run(['--mcp-stdio', `node ${SERVER}`, '--list']);
+    const code = await run(['--mcp-stdio', `node ${SERVER}`, 'commands', 'list']);
     expect(code).toBe(0);
     expect(stdout).toContain('echo');
     expect(stdout).toContain('add-numbers');
@@ -39,6 +39,7 @@ describe('MCP stdio CLI mode', () => {
     const code = await run([
       '--mcp-stdio',
       `node ${SERVER}`,
+      'run',
       'echo',
       '--message',
       'hello filesystem',
@@ -51,6 +52,7 @@ describe('MCP stdio CLI mode', () => {
     const addCode = await run([
       '--mcp-stdio',
       `node ${SERVER}`,
+      'run',
       'add-numbers',
       '--a',
       '2',
@@ -64,6 +66,7 @@ describe('MCP stdio CLI mode', () => {
     const listCode = await run([
       '--mcp-stdio',
       `node ${SERVER}`,
+      'run',
       'list-items',
       '--path',
       '/tmp',

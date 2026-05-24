@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { cacheKeyFor, loadCached, saveCache } from '../../src/core/cache.js';
+import { cacheKeyFor, loadCached, saveCache } from './cache.js';
 
 describe('cacheKeyFor', () => {
   it('is deterministic and sensitive to meaningful config', () => {

@@ -1,7 +1,7 @@
 import { buildSchema, isObjectType } from 'graphql';
 import { describe, expect, it } from 'vitest';
 
-import { buildGraphqlSelectionSet, extractGraphqlCommands } from '../../src/graphql/extract.js';
+import { buildGraphqlSelectionSet, extractGraphqlCommands } from './extract.js';
 
 const schema = buildSchema(`
   type User {

@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { run } from '../../src/cli/main.js';
+import { run } from './main.js';
 
 let stdout = '';
 let stderr = '';
@@ -41,7 +41,7 @@ describe('MCP Streamable HTTP CLI mode', () => {
   it('lists tools from a Streamable HTTP MCP server', async () => {
     const server = await startMcpHttpServer();
     try {
-      const code = await run(['--mcp', server.url, '--list']);
+      const code = await run(['--mcp', server.url, 'commands', 'list']);
       expect(code).toBe(0);
       expect(stdout).toContain('echo');
       expect(stdout).toContain('add-numbers');
@@ -73,7 +73,7 @@ describe('MCP Streamable HTTP CLI mode', () => {
   it('calls a Streamable HTTP MCP tool', async () => {
     const server = await startMcpHttpServer();
     try {
-      const code = await run(['--mcp', server.url, 'add-numbers', '--a', '6', '--b', '7']);
+      const code = await run(['--mcp', server.url, 'run', 'add-numbers', '--a', '6', '--b', '7']);
       expect(code).toBe(0);
       expect(stdout).toContain('13');
     } finally {
@@ -101,6 +101,7 @@ describe('MCP Streamable HTTP CLI mode', () => {
         server.url,
         '--transport',
         'sse',
+        'run',
         'add-numbers',
         '--a',
         '2',
@@ -160,7 +161,10 @@ async function handleMcpRequest(req: IncomingMessage, res: ServerResponse): Prom
   }
 }
 
-async function startMcpSseServer(): Promise<{ url: string; close: () => Promise<void> }> {
+async function startMcpSseServer(): Promise<{
+  url: string;
+  close: () => Promise<void>;
+}> {
   const transports = new Map<string, { transport: SSEServerTransport; server: McpServer }>();
   const httpServer = createServer((req, res) => {
     void (async () => {
@@ -211,7 +215,10 @@ async function startMcpSseServer(): Promise<{ url: string; close: () => Promise<
 }
 
 function createTestMcpServer(): McpServer {
-  const server = new McpServer({ name: 'skill-creator-http-test-server', version: '1.0.0' });
+  const server = new McpServer({
+    name: 'skill-creator-http-test-server',
+    version: '1.0.0',
+  });
   server.registerTool(
     'echo',
     {

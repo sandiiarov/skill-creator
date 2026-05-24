@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { isCliEntrypoint } from '../../src/cli/main.js';
+import { isCliEntrypoint } from './main.js';
 
 describe('isCliEntrypoint', () => {
   it('recognizes npm bin symlinks as the CLI entrypoint', () => {

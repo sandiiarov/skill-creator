@@ -102,7 +102,7 @@ export async function runGenerate(argv: string[]): Promise<void> {
   console.log(`Generated skill: ${skillDir}`);
   console.log(`Agent: ${AGENT_INSTALL_TARGETS[args.agent].displayName}`);
   console.log(`Scope: ${args.scope}`);
-  console.log(`Try: ${join('.', 'scripts', scriptName)} --list`);
+  console.log(`Try: ${join('.', 'scripts', scriptName)} commands list`);
 }
 
 function parseGenerateArgs(argv: string[]): GenerateArgs {
@@ -328,6 +328,7 @@ function renderOpenApiSkillMd(
     scriptName,
     referenceLine: `- \`references/${specFileName}\` — bundled OpenAPI spec used by \`scripts/${scriptName}\`.`,
     workflowIntro: `Use the bundled wrapper script to discover and call ${apiName} operations. Global skill-creator options go before the subcommand; operation-specific options go after it.`,
+    requirements: authRequirementLines(args.authHeaders),
   });
 }
 
@@ -348,6 +349,7 @@ function renderGraphqlSkillMd(
     scriptName,
     referenceLine: `- \`references/${schemaFileName}\` — saved GraphQL schema used by \`scripts/${scriptName}\`.`,
     workflowIntro: `Use the bundled wrapper script to discover and call ${apiName} operations. Global skill-creator options go before the subcommand; operation-specific options go after it.`,
+    requirements: authRequirementLines(args.authHeaders),
     extraGotchas: [
       '- Use `--fields` to keep GraphQL selection sets precise and avoid oversized nested responses.',
       '- Use `--stdin` for complex GraphQL variables that are easier to pass as JSON.',
@@ -362,38 +364,46 @@ function renderApiSkillMd(options: {
   scriptName: string;
   workflowIntro: string;
   referenceLine: string;
+  requirements?: string[];
   extraGotchas?: string[];
 }): string {
   return `---
 name: ${options.name}
 description: ${options.description}
-compatibility: Requires Node.js/npm; wrapper scripts use npx -y @asnd/skill-creator and network access for API calls.
 ---
 
 # ${options.title}
 
 ${options.workflowIntro}
 
-## Usage
+${renderRequirementsSection(options.requirements)}## Start here
 
 \`\`\`bash
-./scripts/${options.scriptName} --list
-./scripts/${options.scriptName} --search '<topic>'
-./scripts/${options.scriptName} <command> --help
-./scripts/${options.scriptName} --pretty <command> <flags>
+./scripts/${options.scriptName} commands list
+./scripts/${options.scriptName} commands search '<topic>'
+./scripts/${options.scriptName} commands help <command>
+./scripts/${options.scriptName} run --pretty <command> <flags>
 \`\`\`
 
-## Workflows
+## Usage rules
 
-1. Start with \`./scripts/${options.scriptName} --list\` or \`./scripts/${options.scriptName} --search '<topic>'\`.
-2. Inspect the chosen command with \`./scripts/${options.scriptName} <command> --help\`.
-3. Test read-only commands first. Use \`--pretty\` for readable JSON and \`--head 3\` to preview large array responses.
+- Run discovery before calling operations: \`commands list\`, \`commands search\`, then \`commands help <command>\`.
+- Execute operations with \`run <command>\`.
+- Put wrapper run flags after \`run\` and before the command; put operation flags after it.
+- Pass JSON object/array flags as quoted JSON strings.
+- Start with safe read-only operations before using write/admin operations.
 
-## Gotchas
+## Output control
 
-- Keep secrets in environment variables or files and pass them through wrapper-auth flags such as \`env:API_TOKEN\`; do not put raw tokens in commands.
-- Do not run write/delete operations unless the user explicitly asks and provides safe test data.
-- For binary or non-JSON responses, use \`--raw > output.ext\` instead of printing to the terminal.
+- Keep first results bounded: use \`--head 3\`, API limit flags, pagination/cursors, or narrow IDs.
+- Use \`--fields a,b,c\` for top-level or dotted field selection when only a subset is needed.
+- Use \`--pretty\` for readable JSON.
+- For binary, raw, or large responses, redirect to a file instead of printing: \`--raw > response.bin\`.
+
+## Safety
+
+- Treat create/update/delete/cancel/trigger/import/webhook/admin/research operations as mutating or potentially costly.
+- Do not run mutating operations unless the user explicitly asks and provides safe target IDs or test data.
 ${options.extraGotchas?.join('\n') ?? ''}
 
 ## References
@@ -416,39 +426,66 @@ function renderMcpSkillMd(
   return `---
 name: ${args.name ?? scriptName}
 description: ${description}
-compatibility: Requires Node.js/npm; wrapper scripts use npx -y @asnd/skill-creator and network access or local MCP server access.
 ---
 
 # ${title}
 
-Use the bundled wrapper script to discover and call ${title} tools over MCP ${transportLabel}.
+Use the bundled Bash wrapper to discover and call ${title} tools over MCP ${transportLabel}.
 
-## Usage
+${renderRequirementsSection(authRequirementLines(args.authHeaders))}## Start here
 
 \`\`\`bash
-./scripts/${scriptName} --list
-./scripts/${scriptName} --search '<topic>'
-./scripts/${scriptName} <tool> --help
-./scripts/${scriptName} --pretty <tool> <flags>
+./scripts/${scriptName} commands list
+./scripts/${scriptName} commands search '<topic>'
+./scripts/${scriptName} commands help <tool>
+./scripts/${scriptName} run --pretty <tool> <flags>
 \`\`\`
 
-## Workflows
+## Usage rules
 
-1. Start with \`./scripts/${scriptName} --list\` or \`./scripts/${scriptName} --search '<topic>'\`.
-2. Inspect the chosen tool with \`./scripts/${scriptName} <tool> --help\`.
-3. Test read-only tools first. Use \`--pretty\` for readable JSON and \`--head 3\` to preview large array responses.
+- Run discovery before calling tools: \`commands list\`, \`commands search\`, then \`commands help <tool>\`.
+- Execute tools with \`run <tool>\`.
+- Put wrapper run flags after \`run\` and before the tool name; put tool-specific flags after it.
+- Pass JSON object/array flags as quoted JSON strings.
+- MCP ${transportLabel} tool lists can change at runtime; rerun \`commands list\` when a tool is missing.
 
-## Gotchas
+## Output control
 
-- Do not run write/delete tools unless the user explicitly asks and provides safe test data.
-- MCP ${transportLabel} tool lists can change at runtime; rerun \`--list\` when a tool is missing.
-- Keep secrets in environment variables or files and pass them through wrapper-auth flags such as \`env:API_TOKEN\`; do not put raw tokens in commands.
+- Keep first results bounded with \`--head 3\`, tool limit flags, pagination/cursors, or narrow IDs.
+- Use \`--fields a,b,c\` for top-level or dotted field selection when only a subset is needed.
+- Use \`--pretty\` for readable JSON.
+- For binary, raw, or large responses, redirect to a file instead of printing: \`--raw > response.bin\`.
+
+## Safety
+
+- Treat create/update/delete/cancel/trigger/admin operations as mutating or potentially costly.
+- Do not run mutating tools unless the user explicitly asks and provides safe target IDs or test data.
 `;
+}
+
+function renderRequirementsSection(requirements: string[] | undefined): string {
+  if (requirements === undefined || requirements.length === 0) return '';
+  return `## Requirements\n\n${requirements.join('\n')}\n\n`;
+}
+
+function authRequirementLines(authHeaders: string[]): string[] {
+  return authHeaders.map((header) => {
+    const [headerName, value] = parseHeader(header);
+    if (value.startsWith('env:')) {
+      const envName = value.slice('env:'.length);
+      return `- \`${envName}\` must be available in the environment for \`${headerName}\` auth.`;
+    }
+    if (value.startsWith('file:')) {
+      const filePath = value.slice('file:'.length);
+      return `- Auth token file \`${filePath}\` must be readable for \`${headerName}\` auth.`;
+    }
+    return `- \`${headerName}\` auth must be configured before calling protected operations.`;
+  });
 }
 
 async function smokeTestScript(scriptPath: string): Promise<void> {
   try {
-    await execFileAsync(scriptPath, ['--list'], { timeout: 120_000 });
+    await execFileAsync(scriptPath, ['commands', 'list'], { timeout: 120_000 });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`generated script smoke test failed: ${message}`);

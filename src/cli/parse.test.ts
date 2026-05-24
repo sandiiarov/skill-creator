@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { splitAtSubcommand } from '../../src/cli/parse.js';
+import { splitAtSubcommand } from './parse.js';
 
 const spec = {
   valueOptions: ['--spec', '--mcp', '--env', '--cache-ttl', '--auth-header', '--head'],

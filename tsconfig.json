@@ -15,5 +15,5 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": ["src", "tests", "vitest.config.ts", "oxfmt.config.ts", "oxlint.config.ts"]
+  "include": ["src", "vitest.config.ts", "oxfmt.config.ts", "oxlint.config.ts"]
 }

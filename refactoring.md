@@ -479,7 +479,7 @@ Important smoke checks:
 ```bash
 node dist/cli/main.js --version
 node dist/cli/main.js --help
-node dist/cli/main.js --graphql https://beta.pokeapi.co/graphql/v1beta --list
+node dist/cli/main.js --graphql https://beta.pokeapi.co/graphql/v1beta commands list
 ```
 
 For MCP stdio after `string-argv`:
@@ -487,7 +487,7 @@ For MCP stdio after `string-argv`:
 ```bash
 pnpm dev -- --mcp-stdio \
   "npx -y -p ajv -p @modelcontextprotocol/server-filesystem mcp-server-filesystem /tmp" \
-  --list
+  commands list
 ```
 
 ## Success criteria

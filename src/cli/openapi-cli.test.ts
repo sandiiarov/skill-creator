@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { run } from '../../src/cli/main.js';
-import { PETSTORE_SPEC } from '../fixtures/petstore.js';
+import { PETSTORE_SPEC } from '../test-fixtures/petstore.js';
+import { run } from './main.js';
 
 let stdout = '';
 let stderr = '';
@@ -63,6 +63,16 @@ function startPetstoreServer(expectedAuth?: string): Promise<{
       return;
     }
 
+    if (req.method === 'GET' && url.pathname === '/api/v1/filter') {
+      res.end(
+        JSON.stringify({
+          list: url.searchParams.get('list'),
+          search: url.searchParams.get('search'),
+        }),
+      );
+      return;
+    }
+
     if (req.method === 'POST' && url.pathname === '/api/v1/pets') {
       let raw = '';
       req.on('data', (chunk) => {
@@ -99,10 +109,50 @@ function closeServer(server: Server): Promise<void> {
 describe('OpenAPI CLI mode', () => {
   it('lists commands from a spec file', async () => {
     const specPath = await writePetstoreSpec();
-    const code = await run(['--spec', specPath, '--base-url', 'http://unused', '--list']);
+    const code = await run(['--spec', specPath, '--base-url', 'http://unused', 'commands', 'list']);
     expect(code).toBe(0);
     expect(stdout).toContain('list-pets');
     expect(stdout).toContain('create-pet');
+  });
+
+  it('keeps legacy command listing syntax working', async () => {
+    const specPath = await writePetstoreSpec();
+    const code = await run(['--spec', specPath, '--base-url', 'http://unused', '--list']);
+    expect(code).toBe(0);
+    expect(stdout).toContain('list-pets');
+  });
+
+  it('searches commands and renders command help through the commands namespace', async () => {
+    const specPath = await writePetstoreSpec();
+
+    expect(
+      await run([
+        '--spec',
+        specPath,
+        '--base-url',
+        'http://unused',
+        'commands',
+        'search',
+        'create',
+      ]),
+    ).toBe(0);
+    expect(stdout).toContain('create-pet');
+    expect(stdout).not.toContain('list-pets');
+
+    stdout = '';
+    expect(
+      await run([
+        '--spec',
+        specPath,
+        '--base-url',
+        'http://unused',
+        'commands',
+        'help',
+        'list-pets',
+      ]),
+    ).toBe(0);
+    expect(stdout).toContain('list-pets: List pets');
+    expect(stdout).toContain('--limit');
   });
 
   it('applies include, exclude, and method filters when listing commands', async () => {
@@ -149,9 +199,13 @@ describe('OpenAPI CLI mode', () => {
         specPath,
         '--base-url',
         server.baseUrl,
+        'run',
+        '--pretty',
+        '--head',
+        '1',
         'list-pets',
         '--limit',
-        '1',
+        '2',
       ]);
       expect(code).toBe(0);
       expect(JSON.parse(stdout)).toEqual([{ id: 1, name: 'Fido' }]);
@@ -172,6 +226,7 @@ describe('OpenAPI CLI mode', () => {
         server.baseUrl,
         '--auth-header',
         'Authorization:env:SKILL_CREATOR_TEST_AUTH_HEADER',
+        'run',
         'list-pets',
       ]);
       expect(code).toBe(0);
@@ -193,6 +248,7 @@ describe('OpenAPI CLI mode', () => {
         specPath,
         '--base-url',
         server.baseUrl,
+        'run',
         'create-pet',
         '--name',
         'Buddy',
@@ -205,6 +261,45 @@ describe('OpenAPI CLI mode', () => {
         name: 'Buddy',
         age: 4,
       });
+    } finally {
+      await server.close();
+    }
+  });
+
+  it('does not treat generated --list and --search options as wrapper discovery flags under run', async () => {
+    const spec = JSON.parse(JSON.stringify(PETSTORE_SPEC)) as typeof PETSTORE_SPEC & {
+      paths: Record<string, unknown>;
+    };
+    spec.paths['/filter'] = {
+      get: {
+        operationId: 'filterPets',
+        summary: 'Filter pets',
+        parameters: [
+          { name: 'list', in: 'query', schema: { type: 'string' } },
+          { name: 'search', in: 'query', schema: { type: 'string' } },
+        ],
+      },
+    };
+
+    const dir = await mkdtemp(join(tmpdir(), 'skill-creator-cli-'));
+    const specPath = join(dir, 'openapi.json');
+    await writeFile(specPath, JSON.stringify(spec));
+    const server = await startPetstoreServer();
+    try {
+      const code = await run([
+        '--spec',
+        specPath,
+        '--base-url',
+        server.baseUrl,
+        'run',
+        'filter-pets',
+        '--list',
+        'yes',
+        '--search',
+        'cats',
+      ]);
+      expect(code).toBe(0);
+      expect(JSON.parse(stdout)).toEqual({ list: 'yes', search: 'cats' });
     } finally {
       await server.close();
     }

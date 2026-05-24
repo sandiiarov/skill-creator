@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { loadOpenApiSpec } from '../../src/openapi/load.js';
-import { PETSTORE_SPEC } from '../fixtures/petstore.js';
+import { PETSTORE_SPEC } from '../test-fixtures/petstore.js';
+import { loadOpenApiSpec } from './load.js';
 
 describe('loadOpenApiSpec', () => {
   it('loads local JSON and YAML spec files', async () => {
