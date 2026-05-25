@@ -1,5 +1,7 @@
 # skill-creator
 
+![skill-creator logo](assets/logo.png)
+
 Give an AI agent a link to an OpenAPI spec, GraphQL schema, or MCP server and get back a ready-to-use Agent Skill with wrapper scripts, references, and usage notes.
 
 Instead of pasting API docs into every chat, install one slash command and let your agent create reusable command-line skills for the tools your team uses.
