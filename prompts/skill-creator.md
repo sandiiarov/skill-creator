@@ -159,6 +159,16 @@ Write short bullets that tell the agent how to operate the wrapper:
 - Pass JSON object/array values as quoted JSON strings.
 - Prefer safe read-only commands/tools before write/admin commands/tools.
 
+## Verified examples
+
+Include this section when smoke testing found stable, useful commands. Add at most two safe, source-specific examples that actually worked. Keep them bounded and read-only.
+
+For MCP skills, prefer examples that prove the important workflow, such as search/list -> inspect examples -> get install command. Do not leave generic placeholder examples in the final skill.
+
+## Gotchas
+
+Include this section when testing reveals source-specific quirks. Capture concise facts such as required project files, default registry names, path normalization, auth/runtime requirements, known upstream tool output bugs, or which helper tool returns the real install command.
+
 ## Output control
 
 Write short bullets that keep context small:
@@ -173,7 +183,7 @@ Write short bullets that keep context small:
 
 Write short bullets that identify risky operation classes for this source:
 
-- Treat create/update/delete/cancel/trigger/import/webhook/admin/research operations as mutating or potentially costly.
+- Treat create/update/delete/cancel/trigger/import/webhook/admin/research/install/add/apply/write/edit operations as mutating or potentially costly.
 - Do not run mutating operations unless the user explicitly asks and provides safe target IDs or test data.
 - For destructive operations, confirm the target ID and intended effect first.
 
@@ -217,11 +227,13 @@ From the generated skill directory, run discovery/help first:
 ./scripts/<script-name> commands help <command-or-tool>
 ```
 
-Then run at most one safe read-only command/tool with bounded output, for example:
+Then run at least one safe read-only command/tool with bounded output, for example:
 
 ```bash
 ./scripts/<script-name> run --pretty --head 3 <safe-read-command-or-tool> <flags>
 ```
+
+For MCP skills, use the smoke test to refine `SKILL.md` with verified examples and gotchas. If a tool returns misleading output, if a helper tool is needed for the real answer, or if the server requires project files/configuration, document that in `SKILL.md`.
 
 If auth, billing, network, missing runtime, or destructive side effects block testing, do not fake success. Record exactly what was skipped and why.
 

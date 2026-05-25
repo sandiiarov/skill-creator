@@ -308,6 +308,11 @@ describe('generate openapi skill', () => {
     expect(script).toContain('--mcp-stdio "node server.js --root /tmp" \\');
     expect(skillMd).toContain('# Filesystem MCP');
     expect(skillMd).toContain('stdio');
+    expect(skillMd).toContain('## Verified examples');
+    expect(skillMd).toContain('Replace this scaffold section after smoke testing');
+    expect(skillMd).toContain('## Gotchas');
+    expect(skillMd).toContain('known upstream tool output bugs');
+    expect(skillMd).toContain('install/add/apply/write/edit');
   });
 
   it('refuses to overwrite an existing generated skill unless --force is provided', async () => {

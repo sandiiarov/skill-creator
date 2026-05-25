@@ -183,6 +183,9 @@ describe('command install', () => {
     expect(installed).toContain('commands search');
     expect(installed).toContain('commands help');
     expect(installed).toContain('run --pretty');
+    expect(installed).toContain('## Verified examples');
+    expect(installed).toContain('## Gotchas');
+    expect(installed).toContain('For MCP skills, use the smoke test to refine `SKILL.md`');
     expect(installed).not.toContain('/skill:skill-creator');
     expect(stdout).toContain('Installed command: skill-creator');
   });

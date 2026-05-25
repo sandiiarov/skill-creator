@@ -449,6 +449,18 @@ ${renderRequirementsSection(authRequirementLines(args.authHeaders))}## Start her
 - Pass JSON object/array flags as quoted JSON strings.
 - MCP ${transportLabel} tool lists can change at runtime; rerun \`commands list\` when a tool is missing.
 
+## Verified examples
+
+Replace this scaffold section after smoke testing with one or two safe, source-specific commands that actually worked. Keep examples bounded and read-only, for example:
+
+\`\`\`bash
+./scripts/${scriptName} run --pretty <safe-read-tool> <flags>
+\`\`\`
+
+## Gotchas
+
+Replace this scaffold section after smoke testing with concise source-specific quirks, such as required project files, default registry names, path normalization, auth/runtime requirements, known upstream tool output bugs, or which helper tool returns the real install command. Remove this section if there are no gotchas.
+
 ## Output control
 
 - Keep first results bounded with \`--head 3\`, tool limit flags, pagination/cursors, or narrow IDs.
@@ -458,8 +470,8 @@ ${renderRequirementsSection(authRequirementLines(args.authHeaders))}## Start her
 
 ## Safety
 
-- Treat create/update/delete/cancel/trigger/admin operations as mutating or potentially costly.
-- Do not run mutating tools unless the user explicitly asks and provides safe target IDs or test data.
+- Treat create/update/delete/cancel/trigger/admin/install/add/apply/write/edit operations as mutating or potentially costly.
+- Do not run mutating tools or generated install commands unless the user explicitly asks and provides safe target IDs, files, or test data.
 `;
 }
 
