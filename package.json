@@ -1,6 +1,6 @@
 {
   "name": "@asnd/skill-creator",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Turn any MCP server, OpenAPI spec, or GraphQL endpoint into a CLI at runtime.",
   "keywords": [
     "commands",
