@@ -167,6 +167,11 @@ async function handleOpenApiMode(globals: GlobalArgs, commandArgv: string[]): Pr
       printHelp();
       throw new Error('provide a subcommand, or use commands list to see available commands');
     },
+    prepareCommandArgs: async (argv) => {
+      const stdinFlag = stripFlag(argv, '--stdin');
+      const stdinValues = globals.stdin || stdinFlag.enabled ? await readStdinJson() : undefined;
+      return { argv: stdinFlag.argv, initialValues: stdinValues ?? {} };
+    },
     executeCommand: async (command, values) => {
       const baseUrl = determineBaseUrl(spec, source, globals.baseUrl);
       const response = await executeOpenApi(command, values, {

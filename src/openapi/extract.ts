@@ -73,8 +73,8 @@ function extractRequestBodyParams(operation: JsonObject): {
   const content =
     requestBody !== undefined && isObject(requestBody.content) ? requestBody.content : {};
 
-  const multipartSchema = getContentSchema(content, 'multipart/form-data');
-  const jsonSchema = getContentSchema(content, 'application/json');
+  const multipartSchema = normalizeObjectSchema(getContentSchema(content, 'multipart/form-data'));
+  const jsonSchema = normalizeObjectSchema(getContentSchema(content, 'application/json'));
   const multipartProps = getProperties(multipartSchema);
   const hasBinary = Object.values(multipartProps).some((schema) => schema.format === 'binary');
 
@@ -90,8 +90,11 @@ function extractRequestBodyParams(operation: JsonObject): {
     contentType = 'multipart/form-data';
   }
 
-  const required = new Set(Array.isArray(schema.required) ? schema.required : []);
-  const properties = getProperties(schema);
+  const normalizedSchema = normalizeObjectSchema(schema);
+  const required = new Set(
+    Array.isArray(normalizedSchema.required) ? normalizedSchema.required : [],
+  );
+  const properties = getProperties(normalizedSchema);
   const params = Object.entries(properties).map(([propName, propSchema]): ParamDef => {
     const isBinary = contentType === 'multipart/form-data' && propSchema.format === 'binary';
     const { type, suffix } = isBinary
@@ -126,6 +129,68 @@ function getProperties(schema: JsonSchema): Record<string, JsonSchema> {
         ),
       )
     : {};
+}
+
+function normalizeObjectSchema(schema: JsonSchema): JsonSchema {
+  const merged = mergeComposedSchemas(schema);
+  const properties = getProperties(merged);
+  if (Object.keys(properties).length === 0) return merged;
+
+  return {
+    ...merged,
+    properties: Object.fromEntries(
+      Object.entries(properties).map(([name, propSchema]) => [
+        name,
+        mergeComposedSchemas(propSchema),
+      ]),
+    ),
+  };
+}
+
+function mergeComposedSchemas(schema: JsonSchema): JsonSchema {
+  const composed = [
+    ...schemaArray(schema.allOf),
+    ...schemaArray(schema.anyOf),
+    ...schemaArray(schema.oneOf),
+  ];
+  if (composed.length === 0) return schema;
+
+  const mergedParts = composed.map((part) => mergeComposedSchemas(part));
+  const mergedProperties: Record<string, JsonSchema> = {};
+  const required = new Set<string>();
+
+  for (const part of mergedParts) {
+    Object.assign(mergedProperties, getProperties(part));
+    if (Array.isArray(part.required)) {
+      for (const name of part.required) {
+        if (typeof name === 'string') required.add(name);
+      }
+    }
+  }
+
+  const ownProperties = getProperties({
+    ...schema,
+    allOf: undefined,
+    anyOf: undefined,
+    oneOf: undefined,
+  });
+  Object.assign(mergedProperties, ownProperties);
+  if (Array.isArray(schema.required)) {
+    for (const name of schema.required) {
+      if (typeof name === 'string') required.add(name);
+    }
+  }
+
+  const { allOf: _allOf, anyOf: _anyOf, oneOf: _oneOf, required: _required, ...rest } = schema;
+  return {
+    ...rest,
+    ...(Object.keys(mergedProperties).length === 0 ? {} : { properties: mergedProperties }),
+    ...(required.size === 0 ? {} : { required: [...required] }),
+  };
+}
+
+function schemaArray(value: unknown): JsonSchema[] {
+  return Array.isArray(value) ? value.filter(isObject).map((item) => item as JsonSchema) : [];
 }
 
 function getSchema(value: unknown): JsonSchema {

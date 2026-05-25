@@ -47,6 +47,80 @@ describe('extractOpenApiCommands', () => {
     ).toEqual(['name', 'tag', 'age']);
   });
 
+  it('extracts request body params from composed allOf schemas', () => {
+    const commands = extractOpenApiCommands({
+      openapi: '3.1.0',
+      info: { title: 'x', version: '1' },
+      paths: {
+        '/contents': {
+          post: {
+            operationId: 'getContents',
+            summary: 'Contents',
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    allOf: [
+                      {
+                        type: 'object',
+                        properties: {
+                          urls: {
+                            type: 'array',
+                            items: { type: 'string' },
+                            description: 'Array of URLs to crawl.',
+                          },
+                        },
+                        required: ['urls'],
+                      },
+                      {
+                        type: 'object',
+                        properties: {
+                          text: {
+                            type: 'boolean',
+                            description: 'Return page text.',
+                          },
+                          summary: {
+                            type: 'object',
+                            description: 'Summary options.',
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expect(commands[0]?.params).toMatchObject([
+      {
+        name: 'urls',
+        originalName: 'urls',
+        location: 'body',
+        required: true,
+        type: 'string',
+      },
+      {
+        name: 'text',
+        originalName: 'text',
+        location: 'body',
+        required: false,
+        type: 'boolean',
+      },
+      {
+        name: 'summary',
+        originalName: 'summary',
+        location: 'body',
+        required: false,
+        type: 'string',
+      },
+    ]);
+  });
+
   it('generates fallback names from method and path when operationId is missing', () => {
     const commands = extractOpenApiCommands({
       openapi: '3.0.0',

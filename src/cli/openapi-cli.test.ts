@@ -2,6 +2,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { Readable } from 'node:stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PETSTORE_SPEC } from '../test-fixtures/petstore.js';
@@ -11,6 +12,7 @@ let stdout = '';
 let stderr = '';
 let logSpy: ReturnType<typeof vi.spyOn>;
 let errorSpy: ReturnType<typeof vi.spyOn>;
+const originalStdin = process.stdin;
 
 beforeEach(() => {
   stdout = '';
@@ -25,6 +27,7 @@ beforeEach(() => {
 
 afterEach(() => {
   delete process.env.SKILL_CREATOR_TEST_AUTH_HEADER;
+  Object.defineProperty(process, 'stdin', { value: originalStdin, configurable: true });
   logSpy.mockRestore();
   errorSpy.mockRestore();
 });
@@ -260,6 +263,35 @@ describe('OpenAPI CLI mode', () => {
         id: 3,
         name: 'Buddy',
         age: 4,
+      });
+    } finally {
+      await server.close();
+    }
+  });
+
+  it('executes a POST operation with stdin body under run', async () => {
+    const specPath = await writePetstoreSpec();
+    const server = await startPetstoreServer();
+    Object.defineProperty(process, 'stdin', {
+      value: Readable.from(['{"name":"Stdin","age":5}']),
+      configurable: true,
+    });
+
+    try {
+      const code = await run([
+        '--spec',
+        specPath,
+        '--base-url',
+        server.baseUrl,
+        'run',
+        '--stdin',
+        'create-pet',
+      ]);
+      expect(code).toBe(0);
+      expect(JSON.parse(stdout)).toMatchObject({
+        id: 3,
+        name: 'Stdin',
+        age: 5,
       });
     } finally {
       await server.close();
