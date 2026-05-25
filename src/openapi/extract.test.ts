@@ -47,6 +47,38 @@ describe('extractOpenApiCommands', () => {
     ).toEqual(['name', 'tag', 'age']);
   });
 
+  it('preserves nullable primitive unions inside composed request body schemas', () => {
+    const commands = extractOpenApiCommands({
+      openapi: '3.1.0',
+      info: { title: 'x', version: '1' },
+      paths: {
+        '/search': {
+          post: {
+            operationId: 'search',
+            requestBody: {
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      numResults: { anyOf: [{ type: 'integer' }, { type: 'null' }] },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expect(commands[0]?.params[0]).toMatchObject({
+      name: 'num-results',
+      type: 'integer',
+      schema: { anyOf: [{ type: 'integer' }, { type: 'null' }] },
+    });
+  });
+
   it('extracts request body params from composed allOf schemas', () => {
     const commands = extractOpenApiCommands({
       openapi: '3.1.0',

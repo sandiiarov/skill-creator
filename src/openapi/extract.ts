@@ -132,7 +132,7 @@ function getProperties(schema: JsonSchema): Record<string, JsonSchema> {
 }
 
 function normalizeObjectSchema(schema: JsonSchema): JsonSchema {
-  const merged = mergeComposedSchemas(schema);
+  const merged = mergeComposedObjectSchema(schema);
   const properties = getProperties(merged);
   if (Object.keys(properties).length === 0) return merged;
 
@@ -141,21 +141,21 @@ function normalizeObjectSchema(schema: JsonSchema): JsonSchema {
     properties: Object.fromEntries(
       Object.entries(properties).map(([name, propSchema]) => [
         name,
-        mergeComposedSchemas(propSchema),
+        mergeComposedObjectSchema(propSchema),
       ]),
     ),
   };
 }
 
-function mergeComposedSchemas(schema: JsonSchema): JsonSchema {
+function mergeComposedObjectSchema(schema: JsonSchema): JsonSchema {
   const composed = [
     ...schemaArray(schema.allOf),
-    ...schemaArray(schema.anyOf),
-    ...schemaArray(schema.oneOf),
+    ...objectCompositionSchemaArray(schema.anyOf),
+    ...objectCompositionSchemaArray(schema.oneOf),
   ];
   if (composed.length === 0) return schema;
 
-  const mergedParts = composed.map((part) => mergeComposedSchemas(part));
+  const mergedParts = composed.map((part) => mergeComposedObjectSchema(part));
   const mergedProperties: Record<string, JsonSchema> = {};
   const required = new Set<string>();
 
@@ -191,6 +191,10 @@ function mergeComposedSchemas(schema: JsonSchema): JsonSchema {
 
 function schemaArray(value: unknown): JsonSchema[] {
   return Array.isArray(value) ? value.filter(isObject).map((item) => item as JsonSchema) : [];
+}
+
+function objectCompositionSchemaArray(value: unknown): JsonSchema[] {
+  return schemaArray(value).filter((schema) => Object.keys(getProperties(schema)).length > 0);
 }
 
 function getSchema(value: unknown): JsonSchema {
