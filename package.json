@@ -38,6 +38,7 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix --fix-suggestions --fix-dangerously",
     "test": "vitest run",
+    "test:e2e": "bash e2e/run.sh",
     "test:watch": "vitest",
     "typecheck": "tsgo --noEmit"
   },
@@ -71,7 +72,7 @@
     "vitest": "^4.0.14"
   },
   "engines": {
-    "node": ">=26"
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
   "packageManager": "pnpm@10.1.0",
   "pi": {

@@ -1,0 +1,9 @@
+.git
+node_modules
+dist
+coverage
+.cache
+tmp
+.pi-lens
+*.log
+.DS_Store

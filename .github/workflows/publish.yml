@@ -48,6 +48,12 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Check Docker
+        run: docker version
+
+      - name: E2E tests
+        run: pnpm test:e2e
+
       - name: Publish to npm
         run: npm publish --access public --provenance
         env:

@@ -1,6 +1,7 @@
 node_modules/
 dist/
 coverage/
+tmp/
 .vitest/
 .pi-lens/
 .DS_Store
