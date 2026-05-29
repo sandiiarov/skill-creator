@@ -16,6 +16,7 @@ import {
   type AgentId,
   type InstallScope,
 } from './agents.js';
+import { upsertManagedSkill } from './lock.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -98,6 +99,15 @@ export async function runGenerate(argv: string[]): Promise<void> {
   await writeFile(join(skillDir, 'SKILL.md'), skillMd);
 
   if (!args.noTest) await smokeTestScript(scriptPath);
+
+  await upsertManagedSkill({
+    name: args.name,
+    agent: args.agent,
+    scope: args.scope,
+    path: skillDir,
+    script: scriptName,
+    template,
+  });
 
   console.log(`Generated skill: ${skillDir}`);
   console.log(`Agent: ${AGENT_INSTALL_TARGETS[args.agent].displayName}`);
@@ -400,11 +410,15 @@ ${renderRequirementsSection(options.requirements)}## Start here
 - Use \`--pretty\` for readable JSON.
 - For binary, raw, or large responses, redirect to a file instead of printing: \`--raw > response.bin\`.
 
+## Gotchas
+
+No gotchas learned yet. When real usage reveals stable custom fields, service quirks, faster command patterns, or corrected examples, update this section directly.
+${options.extraGotchas === undefined ? '' : `\n${options.extraGotchas.join('\n')}`}
+
 ## Safety
 
 - Treat create/update/delete/cancel/trigger/import/webhook/admin/research operations as mutating or potentially costly.
 - Do not run mutating operations unless the user explicitly asks and provides safe target IDs or test data.
-${options.extraGotchas?.join('\n') ?? ''}
 
 ## References
 

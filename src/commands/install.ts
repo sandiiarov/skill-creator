@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import type { InstallScope } from '../skills/agents.js';
 
+import { installBundledSkill } from '../skills/install.js';
 import {
   assertValidCommandName,
   commandFileNameForAgent,
@@ -23,6 +24,7 @@ export type InstallCommandArgs = {
   force: boolean;
   yes: boolean;
   help: boolean;
+  noImprovementSkill: boolean;
 };
 
 type CommandTemplate = {
@@ -39,6 +41,7 @@ export async function runInstallCommand(argv: string[]): Promise<void> {
     return;
   }
 
+  const isBundledDefaultCommand = args.source === undefined;
   const source = args.source ?? bundledCommandSourcePath();
   if (args.agent === undefined || args.scope === undefined) {
     throw new Error('--agent and --scope are required when prompts are unavailable');
@@ -62,6 +65,23 @@ export async function runInstallCommand(argv: string[]): Promise<void> {
   );
   console.log(`Scope: ${args.scope}`);
   console.log(`Path: ${targetDir}`);
+
+  if (isBundledDefaultCommand && !args.noImprovementSkill) {
+    const installedSkill = await installBundledSkill({
+      skillName: 'skill-creator-improvement',
+      agent: args.agent,
+      scope: args.scope,
+      force: args.force,
+    });
+    if (installedSkill === undefined) {
+      console.log(
+        `Skipped skill-creator-improvement: ${args.agent} does not support skill installation`,
+      );
+    } else {
+      console.log(`Installed skill: ${installedSkill.skillName}`);
+      console.log(`Skill path: ${installedSkill.targetRoot}`);
+    }
+  }
 }
 
 function parseInstallCommandArgs(argv: string[]): InstallCommandArgs {
@@ -69,6 +89,7 @@ function parseInstallCommandArgs(argv: string[]): InstallCommandArgs {
     force: false,
     yes: false,
     help: false,
+    noImprovementSkill: false,
   };
   const positional: string[] = [];
   const tokens = argv[0] === 'install' ? argv.slice(1) : argv;
@@ -96,6 +117,9 @@ function parseInstallCommandArgs(argv: string[]): InstallCommandArgs {
         break;
       case '--force':
         args.force = true;
+        break;
+      case '--no-improvement-skill':
+        args.noImprovementSkill = true;
         break;
       case '--yes':
       case '-y':
@@ -278,6 +302,7 @@ Options:
   --agent AGENT         Target agent, e.g. pi, claude-code, cursor, opencode
   --scope SCOPE         Install scope: project|global
   --force               Overwrite existing command files
+  --no-improvement-skill Install only the prompt command, not the companion improvement skill
   --yes, -y             Non-interactive mode; requires --agent and --scope
   --help, -h            Show this help
 `);

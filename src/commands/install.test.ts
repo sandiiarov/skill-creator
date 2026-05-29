@@ -134,8 +134,35 @@ describe('command install', () => {
 
     expect(code).toBe(0);
     expect(await readFile(join(cwd, '.pi/prompts/review.md'), 'utf8')).toBe(content);
+    await expect(
+      readFile(join(cwd, '.pi/skills/skill-creator-improvement/SKILL.md'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
     expect(stdout).toContain('Installed command: review');
     expect(stdout).toContain('.pi/prompts');
+  });
+
+  it('can skip the bundled improvement skill', async () => {
+    const cwd = await createProject();
+    process.chdir(cwd);
+
+    const code = await run([
+      'command',
+      'install',
+      '--agent',
+      'pi',
+      '--scope',
+      'project',
+      '--no-improvement-skill',
+    ]);
+
+    expect(code).toBe(0);
+    expect(await readFile(join(cwd, '.pi/prompts/skill-creator.md'), 'utf8')).toContain(
+      '# Task: create a reusable agent skill',
+    );
+    await expect(
+      readFile(join(cwd, '.pi/skills/skill-creator-improvement/SKILL.md'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(stdout).not.toContain('Installed skill: skill-creator-improvement');
   });
 
   it('installs every markdown command from a directory and skips README files', async () => {
@@ -170,6 +197,10 @@ describe('command install', () => {
 
     expect(code).toBe(0);
     const installed = await readFile(join(cwd, '.pi/prompts/skill-creator.md'), 'utf8');
+    const improvementSkill = await readFile(
+      join(cwd, '.pi/skills/skill-creator-improvement/SKILL.md'),
+      'utf8',
+    );
     expect(installed).toContain('# Task: create a reusable agent skill');
     expect(installed).toContain('The CLI generator creates a scaffold.');
     expect(installed).toContain(
@@ -187,7 +218,10 @@ describe('command install', () => {
     expect(installed).toContain('## Gotchas');
     expect(installed).toContain('For MCP skills, use the smoke test to refine `SKILL.md`');
     expect(installed).not.toContain('/skill:skill-creator');
+    expect(improvementSkill).toContain('name: skill-creator-improvement');
+    expect(improvementSkill).toContain('~/.skill-creator/lock.json');
     expect(stdout).toContain('Installed command: skill-creator');
+    expect(stdout).toContain('Installed skill: skill-creator-improvement');
   });
 
   it('packages command prompts instead of a skill', async () => {
@@ -197,7 +231,7 @@ describe('command install', () => {
     };
 
     expect(pkg.files).toContain('prompts');
-    expect(pkg.files).not.toContain('skills');
+    expect(pkg.files).toContain('skills');
     expect(pkg.pi.prompts).toEqual(['./prompts']);
     expect(pkg.pi.skills).toBeUndefined();
   });

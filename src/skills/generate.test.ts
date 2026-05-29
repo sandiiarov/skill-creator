@@ -12,11 +12,13 @@ let stderr = '';
 let logSpy: ReturnType<typeof vi.spyOn>;
 let errorSpy: ReturnType<typeof vi.spyOn>;
 let originalCwd: string;
+let originalSkillCreatorHome: string | undefined;
 
 beforeEach(() => {
   stdout = '';
   stderr = '';
   originalCwd = process.cwd();
+  originalSkillCreatorHome = process.env.SKILL_CREATOR_HOME;
   logSpy = vi.spyOn(console, 'log').mockImplementation((message = '') => {
     stdout += `${String(message)}\n`;
   });
@@ -27,6 +29,8 @@ beforeEach(() => {
 
 afterEach(() => {
   process.chdir(originalCwd);
+  if (originalSkillCreatorHome === undefined) delete process.env.SKILL_CREATOR_HOME;
+  else process.env.SKILL_CREATOR_HOME = originalSkillCreatorHome;
   logSpy.mockRestore();
   errorSpy.mockRestore();
 });
@@ -37,10 +41,16 @@ async function writeSpec(dir: string): Promise<string> {
   return specPath;
 }
 
-async function createProject(): Promise<{ cwd: string; specPath: string }> {
+async function createProject(): Promise<{
+  cwd: string;
+  specPath: string;
+  skillCreatorHome: string;
+}> {
   const cwd = await mkdtemp(join(tmpdir(), 'skill-creator-generate-'));
+  const skillCreatorHome = join(cwd, '.skill-creator-home');
+  process.env.SKILL_CREATOR_HOME = skillCreatorHome;
   const specPath = await writeSpec(cwd);
-  return { cwd, specPath };
+  return { cwd, specPath, skillCreatorHome };
 }
 
 describe('agent skill install locations', () => {
@@ -62,7 +72,7 @@ describe('agent skill install locations', () => {
 
 describe('generate openapi skill', () => {
   it('creates a spec-compliant OpenAPI skill in the selected agent scope', async () => {
-    const { cwd, specPath } = await createProject();
+    const { cwd, specPath, skillCreatorHome } = await createProject();
     process.chdir(cwd);
 
     const code = await run([
@@ -97,6 +107,8 @@ describe('generate openapi skill', () => {
     );
     expect(skillMd).toContain('Execute operations with `run <command>`.');
     expect(skillMd).toContain('## Output control');
+    expect(skillMd).toContain('## Gotchas');
+    expect(skillMd).toContain('No gotchas learned yet.');
     expect(skillMd).toContain('## Safety');
     expect(skillMd).toContain('references/openapi-spec-');
     expect(script).toMatch(/^#!\/usr\/bin\/env bash\n/);
@@ -109,6 +121,15 @@ describe('generate openapi skill', () => {
     const savedSpec = JSON.parse(await readFile(join(skillDir, 'references', specFile!), 'utf8'));
     expect(savedSpec).toEqual(PETSTORE_SPEC);
     expect((await stat(join(skillDir, 'scripts/youtube'))).mode & 0o111).not.toBe(0);
+    const lock = JSON.parse(await readFile(join(skillCreatorHome, 'lock.json'), 'utf8')) as {
+      skills: Record<string, { name: string; path: string; script: string; template: string }>;
+    };
+    expect(lock.skills['pi:project:youtube']).toMatchObject({
+      name: 'youtube',
+      script: 'youtube',
+      template: 'openapi',
+    });
+    expect(lock.skills['pi:project:youtube']?.path).toContain('.pi/skills/youtube');
     expect(stdout).toContain('.pi/skills/youtube');
   });
 
