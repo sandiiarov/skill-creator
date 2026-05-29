@@ -16,6 +16,7 @@ import {
   type AgentId,
   type InstallScope,
 } from './agents.js';
+import { refreshImprovementSkillDescription } from './improvement.js';
 import { upsertManagedSkill } from './lock.js';
 
 const execFileAsync = promisify(execFile);
@@ -108,6 +109,7 @@ export async function runGenerate(argv: string[]): Promise<void> {
     script: scriptName,
     template,
   });
+  await refreshImprovementSkillDescription({ agent: args.agent, scope: args.scope });
 
   console.log(`Generated skill: ${skillDir}`);
   console.log(`Agent: ${AGENT_INSTALL_TARGETS[args.agent].displayName}`);

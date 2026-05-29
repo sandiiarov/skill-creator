@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import type { InstallScope } from '../skills/agents.js';
 
+import { refreshImprovementSkillDescription } from '../skills/improvement.js';
 import { installBundledSkill } from '../skills/install.js';
 import {
   assertValidCommandName,
@@ -78,6 +79,7 @@ export async function runInstallCommand(argv: string[]): Promise<void> {
         `Skipped skill-creator-improvement: ${args.agent} does not support skill installation`,
       );
     } else {
+      await refreshImprovementSkillDescription({ agent: args.agent, scope: args.scope });
       console.log(`Installed skill: ${installedSkill.skillName}`);
       console.log(`Skill path: ${installedSkill.targetRoot}`);
     }

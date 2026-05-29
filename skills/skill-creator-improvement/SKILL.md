@@ -1,6 +1,6 @@
 ---
 name: skill-creator-improvement
-description: Improve skill-creator generated skills when real usage reveals gotchas, custom fields, faster workflows, corrected command examples, or safer usage patterns.
+description: Improves skill-creator generated skills by updating SKILL.md Gotchas and verified examples with reusable learnings. Use after using a generated skill if the interaction revealed custom fields, service quirks, faster workflows, corrected commands, or safer usage patterns.
 ---
 
 # skill-creator improvement

@@ -56,7 +56,7 @@ flowchart TD
     D --> E[Agent researches source]
     E --> F[Agent runs<br/>skill-creator generate]
     F --> G[Generated skill files]
-    F --> H[Write ~/.skill-creator/lock.json entry]
+    F --> H[Write/Update ~/.skill-creator/lock.json entry]
 
     G --> I[Agent refines SKILL.md]
     I --> J[Agent smoke tests wrapper]
@@ -186,6 +186,7 @@ Rules:
 - Preserve `createdAt` when updating an existing entry.
 - Always update `updatedAt` on successful regeneration.
 - Write lock only after generation and smoke test succeed.
+- After lock updates, refresh the installed `skill-creator-improvement` description so it says: `Use after using any of these generated skills — <all skill names> — ...`.
 
 ## Generated skill changes
 
@@ -239,7 +240,7 @@ Frontmatter:
 ```md
 ---
 name: skill-creator-improvement
-description: Improve skill-creator generated skills when real usage reveals gotchas, custom fields, faster workflows, corrected command examples, or safer usage patterns.
+description: Improves skill-creator generated skills by updating SKILL.md Gotchas and verified examples with reusable learnings. Use after using a generated skill if the interaction revealed custom fields, service quirks, faster workflows, corrected commands, or safer usage patterns.
 ---
 ```
 
